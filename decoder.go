@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"github.com/fatih/color"
 	"io"
 	"os"
 	"strconv"
@@ -32,8 +33,15 @@ func (bencode *bencode) getLen() int {
 
 func (bencode *bencode) checkType() interface{} {
 	switch b, _ := bencode.ReadByte(); b {
+	case 'd':
+		color.Red("Dictionary")
+		return bencode.readItem()
 	case 'i':
+		color.Red("Integer")
 		return bencode.readInteger()
+	case 'l':
+		color.Red("List")
+		return bencode.readList()
 	default:
 		err := bencode.UnreadByte()
 		check(err)
@@ -41,7 +49,7 @@ func (bencode *bencode) checkType() interface{} {
 	}
 }
 
-func (bencode *bencode) readItem() {
+func (bencode *bencode) readItem() int {
 	var key string
 	//var value string
 
@@ -55,6 +63,8 @@ func (bencode *bencode) readItem() {
 
 		bencode.checkType()
 	}
+
+	return 1
 
 }
 
@@ -90,6 +100,24 @@ func (bencode *bencode) readBytes() int {
 }
 
 func (bencode *bencode) readList() int {
+	for {
+		len := bencode.getLen()
+		b := make([]byte, len)
+		_, _ = io.ReadFull(bencode, b)
+		key := string(b)
+		fmt.Println(key)
+
+		if b2, err := bencode.ReadByte(); b2 == 'e' {
+			check(err)
+			return 1
+
+		} else {
+			err := bencode.UnreadByte()
+			check(err)
+		}
+
+	}
+
 	return 1
 }
 

@@ -19,7 +19,7 @@ func check(e error) {
 	}
 }
 
-func (bencode *bencode) genLen() int {
+func (bencode *bencode) getLen() int {
 	len, err := bencode.ReadSlice(':')
 	check(err)
 
@@ -30,23 +30,35 @@ func (bencode *bencode) genLen() int {
 	return i
 }
 
+func (bencode *bencode) checkType() interface{} {
+	switch b, _ := bencode.ReadByte(); b {
+	case 'i':
+		return bencode.readInteger()
+	default:
+		err := bencode.UnreadByte()
+		check(err)
+		return 1
+	}
+}
+
 func (bencode *bencode) readItem() {
 	var key string
 	//var value string
 
 	for {
 
-		len := bencode.genLen()
-		fmt.Println(len)
+		len := bencode.getLen()
 		b := make([]byte, len)
 		_, _ = io.ReadFull(bencode, b)
 		key = string(b)
 		fmt.Println(key)
+
+		bencode.checkType()
 	}
 
 }
 
-func (bencode *bencode) readDictionary() {
+func (bencode *bencode) readDictionary() interface{} {
 	bencode.readItem()
 	/*
 		d := make(map[string]interface{})
@@ -55,18 +67,30 @@ func (bencode *bencode) readDictionary() {
 
 		fmt.Println(string(b))
 	*/
+
+	return nil
 }
 
-func readInteger() {
+func (bencode *bencode) readInteger() int {
+	byteString, err := bencode.ReadSlice('e')
+	check(err)
+
+	s := strings.TrimSuffix(string(byteString), "e")
+
+	i, err := strconv.Atoi(s)
+
+	fmt.Println(i)
+
+	return i
 
 }
 
-func readBytes() {
-
+func (bencode *bencode) readBytes() int {
+	return 1
 }
 
-func readList() {
-
+func (bencode *bencode) readList() int {
+	return 1
 }
 
 func main() {

@@ -8,6 +8,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type bencode struct {
@@ -25,6 +26,8 @@ func (bencode *bencode) getLen() int {
 	check(err)
 
 	s := strings.TrimSuffix(string(len), ":")
+	time.Sleep(2 * time.Second)
+	color.Magenta(s)
 
 	i, _ := strconv.Atoi(s)
 
@@ -34,15 +37,13 @@ func (bencode *bencode) getLen() int {
 func (bencode *bencode) checkType() interface{} {
 	switch b, _ := bencode.ReadByte(); b {
 	case 'd':
-		color.Red("Dictionary")
 		return bencode.readItem()
 	case 'i':
-		color.Red("Integer")
 		return bencode.readInteger()
 	case 'l':
-		color.Red("List")
 		return bencode.readList()
 	default:
+		color.Green(string(b))
 		err := bencode.UnreadByte()
 		check(err)
 		return 1
@@ -51,9 +52,8 @@ func (bencode *bencode) checkType() interface{} {
 
 func (bencode *bencode) readItem() int {
 	var key string
-	//var value string
-
 	for {
+		bencode.checkType()
 
 		len := bencode.getLen()
 		b := make([]byte, len)
@@ -61,24 +61,14 @@ func (bencode *bencode) readItem() int {
 		key = string(b)
 		fmt.Println(key)
 
-		bencode.checkType()
+		if bencode.isEnd() {
+			return 1
+		}
+
 	}
 
 	return 1
 
-}
-
-func (bencode *bencode) readDictionary() interface{} {
-	bencode.readItem()
-	/*
-		d := make(map[string]interface{})
-		b, err := bencode.ReadByte()
-		check(err)
-
-		fmt.Println(string(b))
-	*/
-
-	return nil
 }
 
 func (bencode *bencode) readInteger() int {
@@ -95,39 +85,52 @@ func (bencode *bencode) readInteger() int {
 
 }
 
-func (bencode *bencode) readBytes() int {
-	return 1
-}
-
 func (bencode *bencode) readList() int {
 	for {
+		color.Green("readList")
+		bencode.checkType()
 		len := bencode.getLen()
 		b := make([]byte, len)
 		_, _ = io.ReadFull(bencode, b)
 		key := string(b)
 		fmt.Println(key)
 
-		if b2, err := bencode.ReadByte(); b2 == 'e' {
-			check(err)
+		if bencode.isEnd() {
 			return 1
-
-		} else {
-			err := bencode.UnreadByte()
-			check(err)
 		}
-
 	}
 
 	return 1
 }
 
+func (bencode *bencode) readBytes() int {
+	return 1
+}
+
+func (bencode *bencode) readDictionary() interface{} {
+	bencode.readItem()
+	return nil
+}
+
+func (bencode *bencode) isEnd() bool {
+	if b, err := bencode.ReadByte(); b == 'e' {
+		check(err)
+		return true
+	}
+
+	bencode.UnreadByte()
+	return false
+}
+
 func main() {
-	f, err := os.Open("debian.torrent")
+	f, err := os.Open("ubuntu.torrent")
 	check(err)
 
 	bencode := bencode{*bufio.NewReader(f)}
 	if b, err := bencode.ReadByte(); err != nil {
 		fmt.Println("Not bencode! %s", b)
+	} else {
+		color.Red(string(b))
 	}
 
 	bencode.readDictionary()

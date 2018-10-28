@@ -34,13 +34,10 @@ func (bencode *bencode) getLen() int {
 func (bencode *bencode) checkType() interface{} {
 	switch b, _ := bencode.ReadByte(); b {
 	case 'd':
-		color.Red("readDictionary")
 		return bencode.readDictionary()
 	case 'i':
-		color.Red("readInteger")
 		return bencode.readInteger()
 	case 'l':
-		color.Red("readList")
 		return bencode.readList()
 	default:
 		err := bencode.UnreadByte()
@@ -64,7 +61,6 @@ func (bencode *bencode) readInteger() interface{} {
 func (bencode *bencode) readList() []interface{} {
 	var l []interface{}
 	for {
-		color.Green("readList")
 		bencode.checkType()
 		len := bencode.getLen()
 		b := make([]byte, len)
@@ -91,19 +87,14 @@ func (bencode *bencode) readDictionary() map[string]interface{} {
 
 	m := make(map[string]interface{})
 	for {
-
-		len := bencode.getLen()
-		b := make([]byte, len)
-		_, _ = io.ReadFull(bencode, b)
-		key = string(b)
-		color.Magenta(key)
+		key = bencode.getKey()
 
 		value = bencode.checkType()
-		fmt.Println(value)
-
-		if value != nil {
-			m[key] = value
+		if value == nil {
+			value = bencode.getKey()
 		}
+
+		m[key] = value
 
 		if bencode.isEnd() {
 			return m
@@ -114,6 +105,16 @@ func (bencode *bencode) readDictionary() map[string]interface{} {
 	return m
 }
 
+func (bencode *bencode) getKey() string {
+	var key string
+	len := bencode.getLen()
+	b := make([]byte, len)
+	_, _ = io.ReadFull(bencode, b)
+	key = string(b)
+
+	return key
+
+}
 func (bencode *bencode) isEnd() bool {
 	if b, err := bencode.ReadByte(); b == 'e' {
 		check(err)
@@ -125,7 +126,7 @@ func (bencode *bencode) isEnd() bool {
 }
 
 func decode(torrent string) map[string]interface{} {
-	f, err := os.Open("debianC.torrent")
+	f, err := os.Open(torrent)
 	check(err)
 
 	bencode := bencode{*bufio.NewReader(f)}
@@ -141,5 +142,5 @@ func decode(torrent string) map[string]interface{} {
 }
 
 func main() {
-	decode("ubuntu.torrent")
+	decode("debian.torrent")
 }

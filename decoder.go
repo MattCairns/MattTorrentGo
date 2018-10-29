@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"github.com/fatih/color"
 	"io"
 	"os"
 	"strconv"
@@ -61,11 +60,7 @@ func (bencode *bencode) readInteger() interface{} {
 func (bencode *bencode) readList() []interface{} {
 	var l []interface{}
 	for {
-		bencode.checkType()
-		len := bencode.getLen()
-		b := make([]byte, len)
-		_, _ = io.ReadFull(bencode, b)
-		key := string(b)
+		key := bencode.getKey()
 
 		l = append(l, key)
 
@@ -132,15 +127,8 @@ func decode(torrent string) map[string]interface{} {
 	bencode := bencode{*bufio.NewReader(f)}
 	if b, err := bencode.ReadByte(); err != nil {
 		fmt.Println("Not bencode! %s", b)
-	} else {
-		color.Red(string(b))
 	}
 
 	data := bencode.readDictionary()
-	fmt.Println(data)
 	return data
-}
-
-func main() {
-	decode("debian.torrent")
 }

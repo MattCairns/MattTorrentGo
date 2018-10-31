@@ -13,12 +13,6 @@ type bencode struct {
 	bufio.Reader
 }
 
-func check(e error) {
-	if e != nil {
-		panic(e)
-	}
-}
-
 func (bencode *bencode) getLen() int {
 	len, err := bencode.ReadSlice(':')
 	check(err)

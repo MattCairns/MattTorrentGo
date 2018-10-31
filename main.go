@@ -4,15 +4,25 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"os"
+	"strconv"
 )
 
 func main() {
-	m := decode("debianC.torrent")
+	file := "debian.torrent"
+	m := decode(file)
+	left := url.QueryEscape(strconv.Itoa(m["info"].(map[string]interface{})["length"].(int)))
+	info_hash := url.QueryEscape(string(getInfoHash(file)))
+	peer_id := url.QueryEscape("MT20-111111111111111")
 
 	fmt.Println(m["announce"])
+	fmt.Println(m["info"].(map[string]interface{})["length"])
 
-	response, err := http.Get(m["announce"].(string))
+	t := fmt.Sprintf("%s?info_hash=%s&peer_id=%s&left=%s", m["announce"], info_hash, peer_id, left)
+	fmt.Println(t)
+
+	response, err := http.Get(t)
 	if err != nil {
 		fmt.Printf("%s", err)
 		os.Exit(1)

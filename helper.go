@@ -19,14 +19,15 @@ func getInfoHash(filename string) string {
 
 	s := string(buffer)
 
-	r, err := regexp.Compile("info(.+)$")
+	fmt.Println(s)
+	r, err := regexp.Compile("info(.+)ee$")
 	check(err)
 
-	r.FindString(s)
+	rs := r.FindStringSubmatch(s)
 
 	h := sha1.New()
 
-	h.Write([]byte(s))
+	h.Write([]byte(rs[0]))
 	bs := h.Sum(nil)
 
 	return fmt.Sprintf("%x", bs)

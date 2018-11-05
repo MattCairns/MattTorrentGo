@@ -10,8 +10,9 @@ import (
 )
 
 func main() {
-	file := "debian.torrent"
+	file := "torrents/alaskaS.torrent"
 	m := decode(file)
+
 	left := url.QueryEscape(strconv.Itoa(m["info"].(map[string]interface{})["length"].(int)))
 	info_hash := url.QueryEscape(string(getInfoHash(file)))
 	peer_id := url.QueryEscape("MT20-111111111111111")

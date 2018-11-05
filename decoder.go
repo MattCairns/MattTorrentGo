@@ -54,7 +54,10 @@ func (bencode *bencode) readInteger() interface{} {
 func (bencode *bencode) readList() []interface{} {
 	var l []interface{}
 	for {
-		key := bencode.getKey()
+		key := bencode.checkType()
+		if key == nil {
+			key = bencode.getKey()
+		}
 
 		l = append(l, key)
 
